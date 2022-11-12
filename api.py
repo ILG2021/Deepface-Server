@@ -11,6 +11,7 @@ from flask import Flask, jsonify, request
 import argparse
 import uuid
 import time
+from retinaface import RetinaFace
 
 #------------------------------
 
@@ -277,6 +278,8 @@ def representWrapper(req, trx_id = 0):
 	return resp_obj
 
 if __name__ == "__main__":
+	DeepFace.build_model("Race")
+	RetinaFace.build_model()
 	parser = argparse.ArgumentParser()
 	parser.add_argument(
 		'-p', '--port',
