@@ -1,0 +1,1 @@
+pyinstaller --noconfirm --onedir --console --icon "D:/Duty/Python/Deepface-Server/deepface.png" --name "deepface"  "D:/Duty/Python/Deepface-Server/api.py"
