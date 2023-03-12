@@ -1,48 +1,16 @@
-import warnings
-
-warnings.filterwarnings("ignore")
-
-import os
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
-# ------------------------------
-
-import uuid
-import time
-from retinaface import RetinaFace
 import argparse
-from flask import Flask, request, jsonify
-
-# ------------------------------
-
-import tensorflow as tf
-
-tf_version = int(tf.__version__.split(".")[0])
-
-# ------------------------------
-
-if tf_version == 2:
-    import logging
-
-    tf.get_logger().setLevel(logging.ERROR)
-
-# ------------------------------
+import time
+import uuid
 
 from deepface import DeepFace
-
-# ------------------------------
+from retinaface import RetinaFace
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
 # ------------------------------
-
-if tf_version == 1:
-    graph = tf.get_default_graph()
-
-
-# ------------------------------
 # Service API Interface
+
 
 @app.route('/')
 def index():
@@ -51,19 +19,12 @@ def index():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    global graph
-
     tic = time.time()
     req = request.get_json()
     trx_id = uuid.uuid4()
 
     # ---------------------------
-
-    if tf_version == 1:
-        with graph.as_default():
-            resp_obj = analyzeWrapper(req, trx_id)
-    elif tf_version == 2:
-        resp_obj = analyzeWrapper(req, trx_id)
+    resp_obj = analyzeWrapper(req, trx_id)
 
     # ---------------------------
 
@@ -118,19 +79,13 @@ def analyzeWrapper(req, trx_id=0):
 
 @app.route('/verify', methods=['POST'])
 def verify():
-    global graph
 
     tic = time.time()
     req = request.get_json()
     trx_id = uuid.uuid4()
 
     resp_obj = jsonify({'success': False})
-
-    if tf_version == 1:
-        with graph.as_default():
-            resp_obj = verifyWrapper(req, trx_id)
-    elif tf_version == 2:
-        resp_obj = verifyWrapper(req, trx_id)
+    resp_obj = verifyWrapper(req, trx_id)
 
     # --------------------------
 
@@ -210,19 +165,13 @@ def verifyWrapper(req, trx_id=0):
 
 @app.route('/represent', methods=['POST'])
 def represent():
-    global graph
 
     tic = time.time()
     req = request.get_json()
     trx_id = uuid.uuid4()
 
     resp_obj = jsonify({'success': False})
-
-    if tf_version == 1:
-        with graph.as_default():
-            resp_obj = representWrapper(req, trx_id)
-    elif tf_version == 2:
-        resp_obj = representWrapper(req, trx_id)
+    resp_obj = representWrapper(req, trx_id)
 
     # --------------------------
 
