@@ -1,5 +1,5 @@
 ﻿# Deepface-Server
-Deepface的flask服务端封装，默认端口1234。
+Deepface+yolo的flask服务端封装，默认端口1234。
 
 node_client.js是测试客户端
 
