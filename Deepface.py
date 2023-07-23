@@ -1,11 +1,13 @@
 import argparse
+import os
+import sys
 import time
 import uuid
 
 from deepface import DeepFace
 from flask import Flask, request, jsonify
-from imread_from_url import imread_from_url
 from retinaface import RetinaFace
+from retinaface.RetinaFace import build_model
 
 from yolov7 import YOLOv7, utils
 
@@ -258,12 +260,16 @@ def representWrapper(req, trx_id=0):
 
 if __name__ == "__main__":
     print("人脸识别v2.0.0")
+    script_path = os.path.abspath(sys.argv[0])
+    script_folder = os.path.dirname(script_path)
+
     DeepFace.build_model("Race")
     DeepFace.build_model("Age")
     DeepFace.build_model("Gender")
     DeepFace.build_model("Emotion")
-    RetinaFace.build_model()
-    yolov7_detector = YOLOv7("yolov5s.onnx", conf_thres=0.2, iou_thres=0.3)
+    build_model()
+
+    yolov7_detector = YOLOv7(os.path.join(script_folder, "yolov5s.onnx"), conf_thres=0.2, iou_thres=0.3)
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
