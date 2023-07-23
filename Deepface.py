@@ -48,7 +48,6 @@ def analyzeWrapper(req):
         for item in raw_content:  # item is in type of dict
             instances.append(item)
 
-    print("instances", instances)
     if len(instances) == 0:
         return jsonify({'success': False, 'error': 'you must pass at least one img object in your request'}), 205
 
@@ -180,7 +179,7 @@ def persons():
     results = []
     if instances and len(instances) > 0:
         for instance in instances:
-            boxes, scores, class_ids = yolov7_detector(imread_from_url(instance))
+            boxes, scores, class_ids = yolov7_detector(instance)
             output = utils.format_output(boxes, scores, class_ids)
             count_persons = sum(1 for item in output if item.get('name') == 'person')
             results.append(count_persons)
@@ -195,7 +194,7 @@ def objects():
     results = []
     if instances and len(instances) > 0:
         for instance in instances:
-            boxes, scores, class_ids = yolov7_detector(imread_from_url(instance))
+            boxes, scores, class_ids = yolov7_detector(instance)
             results.append(utils.format_output(boxes, scores, class_ids))
     return results
 

@@ -84,10 +84,6 @@
   {
    "optionDest": "hiddenimports",
    "value": "fake_useragent.data"
-  },
-  {
-   "optionDest": "datas",
-   "value": "D:/Duty/Python/Deepface-Server/venv/Lib/site-packages/fake_useragent;fake_useragent/"
   }
  ],
  "nonPyinstallerOptions": {

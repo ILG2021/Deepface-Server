@@ -1,3 +1,7 @@
+import base64
+import io
+from PIL import Image
+
 import numpy as np
 import cv2
 
@@ -123,6 +127,31 @@ def format_output(boxes, scores, class_ids):
         })
 
     return result
+
+
+def imread_from_base64(image):
+    encoded_data = image.split(',')[1]
+    image = Image.open(io.BytesIO(base64.b64decode(encoded_data)))
+    seek_index = 0
+    if 'n_frames' in dir(image):
+
+        if 0 <= seek_index < image.n_frames:
+            image.seek(seek_index)
+        elif seek_index < 0:
+            print('The index when seeking must be a positive integer')
+            print('seek_index:', seek_index)
+            image.seek(0)
+        else:
+            print('An index outside the seek range was specified')
+            print('n_frames:', image.n_frames)
+            print('seek_index:', seek_index)
+            image.seek(image.n_frames - 1)
+        image = image.convert('RGB')
+
+    # RGB -> BGR
+    image = cv2.cvtColor(np.array(image, dtype=np.uint8), cv2.COLOR_RGB2BGR)
+
+    return image
 
 
 def draw_comparison(img1, img2, name1, name2, fontsize=2.6, text_thickness=3):

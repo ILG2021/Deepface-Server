@@ -1,9 +1,11 @@
+import base64
+import io
 import time
 import cv2
 import numpy as np
 import onnxruntime
-
-from yolov7.utils import xywh2xyxy, nms, draw_detections
+from yolov7.utils import xywh2xyxy, nms, draw_detections, imread_from_base64
+from PIL import Image
 
 
 class YOLOv7:
@@ -29,9 +31,8 @@ class YOLOv7:
 
         self.has_postprocess = 'score' in self.output_names or self.official_nms
 
-
     def detect_objects(self, image):
-        input_tensor = self.prepare_input(image)
+        input_tensor = self.prepare_input(imread_from_base64(image))
 
         # Perform inference on the image
         outputs = self.inference(input_tensor)
@@ -60,12 +61,11 @@ class YOLOv7:
 
         return input_tensor
 
-
     def inference(self, input_tensor):
         start = time.perf_counter()
         outputs = self.session.run(self.output_names, {self.input_names[0]: input_tensor})
 
-        print(f"Inference time: {(time.perf_counter() - start)*1000:.2f} ms")
+        print(f"Inference time: {(time.perf_counter() - start) * 1000:.2f} ms")
         return outputs
 
     def process_output(self, output):
@@ -102,10 +102,10 @@ class YOLOv7:
 
     def parse_processed_output(self, outputs):
 
-        #Pinto's postprocessing is different from the official nms version
+        # Pinto's postprocessing is different from the official nms version
         if self.official_nms:
-            scores = outputs[0][:,-1]
-            predictions = outputs[0][:, [0,5,1,2,3,4]]
+            scores = outputs[0][:, -1]
+            predictions = outputs[0][:, [0, 5, 1, 2, 3, 4]]
         else:
             scores = np.squeeze(outputs[0], axis=1)
             predictions = outputs[1]

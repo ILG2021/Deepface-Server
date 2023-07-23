@@ -34,7 +34,7 @@ async function yolo() {
     var response = await fetch('http://127.0.0.1:1234/persons',
         {method: 'POST', body: JSON.stringify({
             "img": [
-              url
+              imgData
             ]
           }),
           "headers": {
@@ -49,7 +49,7 @@ async function yolo() {
     var response = await fetch('http://127.0.0.1:1234/objects',
         {method: 'POST', body: JSON.stringify({
             "img": [
-              url
+              imgData
             ]
           }),
           "headers": {
