@@ -3,10 +3,14 @@ import time
 import uuid
 
 from deepface import DeepFace
-from retinaface import RetinaFace
 from flask import Flask, request, jsonify
+from imread_from_url import imread_from_url
+from retinaface import RetinaFace
+
+from yolov7 import YOLOv7, utils
 
 app = Flask(__name__)
+
 
 # ------------------------------
 # Service API Interface
@@ -24,7 +28,7 @@ def analyze():
     trx_id = uuid.uuid4()
 
     # ---------------------------
-    resp_obj = analyzeWrapper(req, trx_id)
+    resp_obj = analyzeWrapper(req)
 
     # ---------------------------
 
@@ -33,12 +37,10 @@ def analyze():
     resp_obj["trx_id"] = trx_id
     resp_obj["seconds"] = toc - tic
 
-    return resp_obj, 200
+    return resp_obj
 
 
-def analyzeWrapper(req, trx_id=0):
-    resp_obj = jsonify({'success': False})
-
+def analyzeWrapper(req):
     instances = []
     if "img" in list(req.keys()):
         raw_content = req["img"]  # list
@@ -52,34 +54,22 @@ def analyzeWrapper(req, trx_id=0):
 
     print("Analyzing ", len(instances), " instances")
 
-    # ---------------------------
-
-    detector_backend = 'opencv'
-
     actions = ['emotion', 'age', 'gender', 'race']
 
     if "actions" in list(req.keys()):
         actions = req["actions"]
-
-    if "detector_backend" in list(req.keys()):
-        detector_backend = req["detector_backend"]
-
-    # ---------------------------
-
-    try:
-        resp_obj = DeepFace.analyze(instances, actions=actions, enforce_detection=False, detector_backend="retinaface")
-    except Exception as err:
-        print("Exception: ", str(err))
-        return jsonify({'success': False, 'error': str(err)}), 205
-
-    # ---------------
-    # print(resp_obj)
+    results = DeepFace.analyze(instances[0], actions=actions, enforce_detection=False,
+                               detector_backend="retinaface")
+    i = 1
+    resp_obj = {}
+    for result in results:
+        resp_obj["instance_" + str(i)] = result
+        i = i + 1
     return resp_obj
 
 
 @app.route('/verify', methods=['POST'])
 def verify():
-
     tic = time.time()
     req = request.get_json()
     trx_id = uuid.uuid4()
@@ -165,7 +155,6 @@ def verifyWrapper(req, trx_id=0):
 
 @app.route('/represent', methods=['POST'])
 def represent():
-
     tic = time.time()
     req = request.get_json()
     trx_id = uuid.uuid4()
@@ -181,6 +170,34 @@ def represent():
     resp_obj["seconds"] = toc - tic
 
     return resp_obj, 200
+
+
+@app.route('/persons', methods=["POST"])
+def persons():
+    if request.method != "POST":
+        return
+    instances = request.get_json()['img']
+    results = []
+    if instances and len(instances) > 0:
+        for instance in instances:
+            boxes, scores, class_ids = yolov7_detector(imread_from_url(instance))
+            output = utils.format_output(boxes, scores, class_ids)
+            count_persons = sum(1 for item in output if item.get('name') == 'person')
+            results.append(count_persons)
+    return results
+
+
+@app.route('/objects', methods=["POST"])
+def objects():
+    if request.method != "POST":
+        return
+    instances = request.get_json()['img']
+    results = []
+    if instances and len(instances) > 0:
+        for instance in instances:
+            boxes, scores, class_ids = yolov7_detector(imread_from_url(instance))
+            results.append(utils.format_output(boxes, scores, class_ids))
+    return results
 
 
 def representWrapper(req, trx_id=0):
@@ -241,11 +258,13 @@ def representWrapper(req, trx_id=0):
 
 
 if __name__ == "__main__":
+    print("人脸识别v2.0.0")
     DeepFace.build_model("Race")
     DeepFace.build_model("Age")
     DeepFace.build_model("Gender")
     DeepFace.build_model("Emotion")
     RetinaFace.build_model()
+    yolov7_detector = YOLOv7("yolov5s.onnx", conf_thres=0.2, iou_thres=0.3)
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
